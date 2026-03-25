@@ -1,7 +1,8 @@
 import { WebSocketServer } from "ws";
-import { playerStore } from "./store";
-import { WSMessage } from "./types";
-import { createRegResponse } from "./handlers";
+import { gameStore, playerStore } from "./store";
+import { WebSocketWithId, WSMessage } from "./types";
+import { createNewGameResponse, createRegResponse } from "./utils";
+import { randomUUID } from "crypto";
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
@@ -12,15 +13,18 @@ wss.on("listening", () => {
  console.log(`Websocket server started on port ${PORT}`);
 });
 
-wss.on("connection", (ws) => {
- console.log("New client connected");
+wss.on("connection", (ws: WebSocketWithId) => {
+ ws.id = randomUUID();
+ ws.on("error", console.error);
+
+ console.log(`User ${ws.id} joined the server`);
 
  ws.on("error", console.error);
 
  ws.on("message", async (message) => {
   try {
    const parsedMessage = JSON.parse(message.toString());
-   const response = await handleIncomingMessage(parsedMessage);
+   const response = await handleIncomingMessage(parsedMessage, ws);
 
    if (response) {
     ws.send(JSON.stringify(response));
@@ -35,7 +39,10 @@ wss.on("connection", (ws) => {
  });
 });
 
-export const handleIncomingMessage = async (message: WSMessage) => {
+export const handleIncomingMessage = async (
+ message: WSMessage,
+ ws: WebSocketWithId,
+) => {
  const { type, data } = message;
 
  const parsedData = typeof data === "string" ? JSON.parse(data) : data;
@@ -44,5 +51,8 @@ export const handleIncomingMessage = async (message: WSMessage) => {
   case "reg":
    const registeredPlayer = playerStore.addPlayer(parsedData);
    return createRegResponse(registeredPlayer);
+  case "create_game":
+   const newGame = gameStore.createGame(parsedData, ws);
+   return createNewGameResponse(newGame);
  }
 };
