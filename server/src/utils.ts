@@ -1,23 +1,40 @@
-import { Game, User } from "./types";
+import { Game, User, WebSocketWithId } from "./types";
 
-export const createRegResponse = (player: User) => ({
- type: "reg",
- data: {
-  name: player.name,
-  index: player.index,
-  error: false,
-  errorText: "",
+export const createRegResponse = (player: User, ws: WebSocketWithId) => ({
+ response: {
+  type: "reg",
+  data: {
+   name: player.name,
+   index: player.index,
+   error: false,
+   errorText: "",
+  },
+  id: 0,
  },
- id: 0,
+ target: ws,
 });
 
-export const createNewGameResponse = (game: Game) => ({
- type: "game_created",
- data: {
-  gameId: game.id,
-  code: game.code,
+export const createNewGameResponse = (game: Game, ws: WebSocketWithId) => ({
+ response: {
+  type: "game_created",
+  data: {
+   gameId: game.id,
+   code: game.code,
+  },
+  id: 0,
  },
- id: 0,
+ target: ws,
+});
+
+export const createJoinedGameResponse = (game: Game, ws: WebSocketWithId) => ({
+ response: {
+  type: "game_joined",
+  data: {
+   gameId: game.id,
+  },
+  id: 0,
+ },
+ target: ws,
 });
 
 export const generateGameCode = () => {
