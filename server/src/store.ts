@@ -6,8 +6,8 @@ import {
  RegData,
  StartGameData,
  User,
+ Player,
  WebSocketWithId,
- WSMessage,
 } from "./types";
 import { generateGameCode } from "./utils";
 
@@ -28,6 +28,10 @@ class Players {
     return player;
    }
   }
+ }
+
+ removePlayer(player: Player) {
+  this.players.delete(player.name);
  }
 }
 
@@ -91,6 +95,7 @@ class Games {
   gameToJoin.players.push(existingPlayer);
 
   existingPlayer.score = 0;
+  existingPlayer.hasAnswered = false;
 
   gameToJoin.playerAnswers.set(existingPlayer.name, {
    answerIndex: 0,
@@ -104,6 +109,16 @@ class Games {
   const gameStarted = this.findGameById(data.gameId);
   if (gameStarted) gameStarted.status = "in_progress";
   return gameStarted;
+ }
+
+ findGameByPlayer(playerName: string): Game | undefined {
+  for (const game of this.games.values()) {
+   const found = game.players.find(
+    (player: Player) => player.name === playerName,
+   );
+   if (found) return game;
+  }
+  return undefined;
  }
 }
 
